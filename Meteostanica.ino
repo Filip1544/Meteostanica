@@ -1,0 +1,94 @@
+#include <WiFi.h>
+#include <Adafruit_MQTT.h>
+#include <Adafruit_MQTT_Client.h>
+#include <Wire.h>
+#include <Adafruit_SHT31.h>
+#include <Adafruit_BMP280.h>
+
+const char* ssid = "TP-Link_F374";
+const char* password = "A9WTAD9N56";
+
+#define IO_USERNAME "Filip1548"
+#define IO_KEY      "aio_NAIW81gYcGMFq444hDglwLfmc24m"
+
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(&client, "io.adafruit.com", 1883, IO_USERNAME, IO_KEY);
+
+Adafruit_MQTT_Publish tempFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/teplota");
+Adafruit_MQTT_Publish humFeed  = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/vlhkost");
+Adafruit_MQTT_Publish presFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/tlak");
+Adafruit_MQTT_Publish battFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/bateria"); // NOVE
+
+Adafruit_SHT31 sht31 = Adafruit_SHT31();
+Adafruit_BMP280 bmp;
+
+#define BAT_PIN 34
+
+void setup() {
+  Serial.begin(115200);
+  delay(1000);
+
+  Wire.begin(21, 22);
+
+  analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);
+
+  WiFi.begin(ssid, password);
+  Serial.print("Pripojujem sa na WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println(" pripojene!");
+
+  if (!sht31.begin(0x44)) {
+    Serial.println("SHT31 nenajdeny!");
+    while (1) delay(1);
+  } else {
+    Serial.println("SHT31 OK");
+  }
+
+  if (!bmp.begin(0x76)) {
+    Serial.println("BMP280 nenajdeny!");
+    while (1) delay(1);
+  } else {
+    Serial.println("BMP280 OK");
+  }
+}
+
+void loop() {
+  if (!mqtt.connected()) {
+    Serial.println("Pripajam MQTT...");
+    while (mqtt.connect() != 0) {
+      Serial.println("Chyba, retry...");
+      delay(5000);
+    }
+  }
+
+  float t = sht31.readTemperature();
+  float h = sht31.readHumidity();
+  float p = bmp.readPressure() / 100.0;
+
+  float p_sea = p * pow(1 - (0.0065 * 160.0) / (t + 0.0065 * 160 + 273.15), -5.257);
+
+  int raw = analogRead(BAT_PIN);
+  float voltage = (raw / 4095.0) * 3.3;  
+  float realVoltage = voltage * 2.0;     
+
+  float percent = (realVoltage - 3.0) / (4.2 - 3.0) * 100.0;
+  percent = constrain(percent, 0, 100);
+
+  if (!isnan(t)) tempFeed.publish(t);
+  if (!isnan(h)) humFeed.publish(h);
+  if (!isnan(p_sea)) presFeed.publish(p_sea);
+  battFeed.publish(percent);
+
+  Serial.print("Teplota: "); Serial.println(t);
+  Serial.print("Vlhkost: "); Serial.println(h);
+  Serial.print("Tlak: "); Serial.println(p);
+
+  Serial.print("Napatie baterie: "); Serial.println(realVoltage);
+  Serial.print("Bateria %: "); Serial.println(percent);
+
+  delay(10000);
+}
