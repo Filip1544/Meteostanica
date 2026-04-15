@@ -5,11 +5,11 @@
 #include <Adafruit_SHT31.h>
 #include <Adafruit_BMP280.h>
 
-const char* ssid = "TP-Link_F374";
-const char* password = "A9WTAD9N56";
+const char* ssid = "ssid wifi";
+const char* password = "wifi heslo";
 
-#define IO_USERNAME "Filip1548"
-#define IO_KEY      "aio_NAIW81gYcGMFq444hDglwLfmc24m"
+#define IO_USERNAME "meno na adafruit io"
+#define IO_KEY      "kluc od adafruit io"
 
 WiFiClient client;
 Adafruit_MQTT_Client mqtt(&client, "io.adafruit.com", 1883, IO_USERNAME, IO_KEY);
