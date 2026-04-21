@@ -17,7 +17,7 @@ Adafruit_MQTT_Client mqtt(&client, "io.adafruit.com", 1883, IO_USERNAME, IO_KEY)
 Adafruit_MQTT_Publish tempFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/teplota");
 Adafruit_MQTT_Publish humFeed  = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/vlhkost");
 Adafruit_MQTT_Publish presFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/tlak");
-Adafruit_MQTT_Publish battFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/bateria"); // NOVE
+Adafruit_MQTT_Publish battFeed = Adafruit_MQTT_Publish(&mqtt, IO_USERNAME "/feeds/bateria");
 
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 Adafruit_BMP280 bmp;
